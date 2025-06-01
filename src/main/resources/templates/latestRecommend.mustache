@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>최근 유사 방문자 추천</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: skyblue;
+            padding: 40px;
+        }
+        h1 {
+            color: #333;
+        }
+        .profiles {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        .profile-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            width: 300px;
+        }
+        .face-img {
+            width: 150px;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .coffee-img {
+            width: 120px;
+            height: auto;
+            border-radius: 8px;
+        }
+        .coffee-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #6b4f4f;
+        }
+        .button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ff9800;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+
+        .button-row {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;  /* 버튼 간격 */
+        }
+
+        .button-row button {
+            padding: 10px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #007BFF; /* 기본 파란색 */
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .button-row button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 두번째 버튼만 별도 색상 */
+        .button-row button:nth-child(2) {
+            background-color: #4CAF50;
+        }
+
+        .button-row button:nth-child(2):hover {
+            background-color: #3e8e41;
+        }
+
+        .disabled-btn {
+            background-color: #ccc !important;
+            cursor: not-allowed;
+            color: #666 !important;
+        }
+    </style>
+</head>
+<body>
+
+<h1>본인이 있습니까?</h1>
+<p>최근 유사 방문자의 추천을 확인해보세요.</p>
+
+<div class="profiles">
+
+        <div class="profile-card">
+            <img src="/{{image1}}" alt="유사 인물" class="face-img">
+            <div class="coffee-name">{{coffeeName1}}</div>
+            <img src="{{coffeeImage1}}" alt="추천 커피" class="coffee-img">
+            <div> 주문한 날짜 : {{orderTime1}} </div>
+
+            <form action="/pay_single" method="post">
+                <input type="hidden" name="faceId" value="{{newFaceId}}">
+                <input type="hidden" name="coffeeId" value="{{coffeeId1}}">
+                <button class="button {{#disableCoffee1}}disabled-btn{{/disableCoffee1}}"
+                        {{#disableCoffee1}}disabled{{/disableCoffee1}}
+                        onclick="paySingle(event)">예, 이걸로 결제하기</button>
+            </form>
+
+        </div>
+
+        <div class="profile-card">
+            <img src="/{{image2}}" alt="유사 인물" class="face-img">
+            <div class="coffee-name">{{coffeeName2}}</div>
+            <img src="{{coffeeImage2}}" alt="추천 커피" class="coffee-img">
+            <div> 주문한 날짜 : {{orderTime2}} </div>
+            <form action="/pay_single" method="post">
+                <input type="hidden" name="faceId" value="{{newFaceId}}">
+                <input type="hidden" name="coffeeId" value="{{coffeeId2}}">
+                <button class="button {{#disableCoffee2}}disabled-btn{{/disableCoffee2}}"
+                        {{#disableCoffee2}}disabled{{/disableCoffee2}}
+                        onclick="paySingle(event)">예, 이걸로 결제하기</button>
+            </form>
+
+        </div>
+
+        <div class="profile-card">
+            <img src="/{{image3}}" alt="유사 인물" class="face-img">
+            <div class="coffee-name">{{coffeeName3}}</div>
+            <img src="{{coffeeImage3}}" alt="추천 커피" class="coffee-img">
+            <div> 주문한 날짜 : {{orderTime3}} </div>
+            <form action="/pay_single" method="post">
+                <input type="hidden" name="faceId" value="{{newFaceId}}">
+                <input type="hidden" name="coffeeId" value="{{coffeeId3}}">
+                <button class="button {{#disableCoffee3}}disabled-btn{{/disableCoffee3}}"
+                        {{#disableCoffee3}}disabled{{/disableCoffee3}}
+                        onclick="paySingle(event)">예, 이걸로 결제하기</button>
+            </form>
+
+        </div>
+
+</div>
+
+<div class="button-row">
+    <button onclick="cancel()">커피 메뉴판 가기</button>
+    <button style="background-color: #4CAF50;" onclick="goToAIPage()">돌아가기</button>
+</div>
+
+<script>
+
+    function cancel() {
+        const newFaceId = "{{newFaceId}}";
+        const url = `/?new_face_id=${encodeURIComponent(newFaceId)}`;
+        window.location.href = url;
+    }
+
+     function goToAIPage() {
+         window.location.href = "http://localhost:4001/";
+    }
+
+    function paySingle(event) {
+        event.preventDefault(); // 기본 폼 제출 막기
+
+        const form = event.target.closest('form'); // 클릭된 버튼의 form만 선택
+        const faceId = form.querySelector('input[name="faceId"]').value;
+        const coffeeId = form.querySelector('input[name="coffeeId"]').value;
+
+        fetch('/pay_single', {  // URL은 form의 action과 동일하게 설정
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                faceId: faceId,
+                coffeeId: coffeeId
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('결제 실패');
+            if (response.ok) {
+                setTimeout(() => {
+                    window.location.href = "/load";
+                }, 2000);
+            }
+
+            return response.text();
+        })
+        .then(data => {
+            alert(data); // 예: "결제 및 저장 완료!"
+            window.location.href = '/load'; // 결제 완료 후 이동
+        })
+        .catch(error => {
+            console.error(error);
+            alert('결제 중 오류가 발생했습니다.');
+        });
+    }
+</script>
+
+</body>
+</html>

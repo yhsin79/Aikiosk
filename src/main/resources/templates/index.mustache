@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커피 메뉴 키오스크</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style></style>
+
+
+</head>
+<body>
+
+
+<div class="kiosk-container">
+    <h1 class="center-box" style="">커피 메뉴</h1>
+    <div class="menu-grid">
+        {{#coffeeMenuList}}
+            <div class="menu-item" data-id="{{id}}">
+                <img src="{{image_url}}" alt="{{name}}">
+                <h3>{{name}}</h3>
+                <p>{{price}} 원</p>
+            </div>
+        {{/coffeeMenuList}}
+    </div>
+
+
+    <div class="pagination">
+        {{#pages}}
+            {{#isCurrent}}
+                <span class="current-page">{{pageNumber}}</span>
+            {{/isCurrent}}
+            {{^isCurrent}}
+                <a href="/?page={{pageNumber}}&itemsPerPage=6&new_face_id={{new_face_id}}" class="page-btn">{{pageNumber}}</a>
+            {{/isCurrent}}
+        {{/pages}}
+    </div>
+
+
+</div>
+
+</body>
+
+<footer class="cart-footer">
+    <div class="cart-container">
+        <h3>🛒 장바구니</h3>
+        <div id="order-list"></div>
+        <p id="total-price">총 금액: 0원</p>
+<!--        <button id="checkout-btn">결제하기</button>-->
+        <div class="cart-buttons">
+            <button id="goback-btn" onclick="goToAIPage()">돌아가기</button>
+            <button id="clear-cart-btn">모두 해제</button>
+            <button id="checkout-btn">결제하기</button>
+        </div>
+    </div>
+</footer>
+
+<script src="/js/script.js"></script>
+
+</html>

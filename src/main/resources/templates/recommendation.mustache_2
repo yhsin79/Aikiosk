@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>추천 커피</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            background-color: #f8f8f8;
+            text-align: center;
+        }
+        .coffee-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        img {
+            width: 300px;
+            height: auto;
+            border-radius: 10px;
+        }
+        h1 {
+            margin-top: 15px;
+            color: #6b4f4f;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .cancel-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .pay-btn {
+            background-color: #ff9800;
+            color: white;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+<div class="coffee-container">
+    <h2>다시 오셨군요!</h2>
+    <h2>{{orderCount}}번째 방문자님!</h2>
+    <img src="{{coffeeImage}}" alt="추천 커피">
+    <h1>{{coffeeName}} 추천합니다!</h1>
+    <div class="buttons">
+        <button class="cancel-btn" onclick="cancel()">취소</button>
+        <button class="pay-btn" style="background-color: #4CAF50;" onclick="goToAIPage()">돌아가기</button>
+        <button class="pay-btn" onclick="paySingle()">결제</button>
+    </div>
+</div>
+
+<script>
+
+    function cancel() {
+        const newFaceId = "{{newFaceId}}";
+        const url = `/?new_face_id=${encodeURIComponent(newFaceId)}`;
+        window.location.href = url;
+    }
+
+    function paySingle() {
+        const coffeeId = "{{coffeeId}}";
+        const newFaceId = "{{newFaceId}}";
+
+        const formData = new URLSearchParams();
+        formData.append("faceId", newFaceId);
+        formData.append("coffeeId", coffeeId);
+
+        fetch('/pay_single', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData.toString()
+        })
+        .then(response => {
+            if (response.ok) {
+                localStorage.removeItem("cartItems");
+
+                setTimeout(() => {
+                    window.location.href = "/load";
+                }, 2000);
+
+                return response.text();  // 꼭 반환해줘야 아래 then(result => ...) 실행됨
+            } else {
+                alert("결제에 실패했습니다.");
+                console.log(response);
+                throw new Error("결제 실패");
+            }
+        })
+        .then(result => {
+            console.log("결제 결과 메시지:", result);
+        })
+        .catch(error => {
+            console.error("결제 실패:", error);
+        });
+    }
+
+    function goToAIPage() {
+         window.location.href = "http://localhost:4001/";
+    }
+</script>
+
+</body>
+
+
+</html>

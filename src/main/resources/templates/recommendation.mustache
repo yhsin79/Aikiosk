@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>추천 커피</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            background-color: #f8f8f8;
+            text-align: center;
+        }
+        .coffee-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+             margin-top: 10px;
+        }
+        img {
+            width: 300px;
+            height: auto;
+            border-radius: 10px;
+        }
+        h1 {
+            margin-top: 15px;
+            color: #6b4f4f;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .cancel-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .pay-btn {
+            background-color: #ff9800;
+            color: white;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .pay-btn.disabled-btn {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+<div style="display: flex; justify-content: center; align-items: flex-start; gap: 40px;">
+    <!-- 왼쪽: 추천 커피 박스 -->
+    <div class="coffee-container">
+        <h2>AI가 추천하는 커피!</h2>
+        <img src="{{coffeeImage}}" alt="추천 커피">
+        <h1>{{coffeeName}} 추천합니다!</h1>
+        <div class="buttons">
+            <button class="cancel-btn" onclick="cancel()">취소</button>
+            <button class="pay-btn" style="background-color: #4CAF50;" onclick="goToAIPage()">돌아가기</button>
+            <button class="pay-btn" onclick="paySingle()">결제</button>
+        </div>
+    </div>
+
+    <!-- 오른쪽: 히스토리 박스 -->
+    <fieldset style="border: 2px solid red; padding: 20px; border-radius: 10px; min-width: 300px;">
+        <legend style="font-size: 20px; font-weight: bold; color: red;">HISTORY</legend>
+        <p>나와 유사한 얼굴이 총 <strong>{{totalOrderCount}}</strong>회 조회되었습니다.</p>
+
+        <fieldset style="margin-top: 15px; border: 1px solid #ccc; border-radius: 8px; padding: 10px;">
+            <legend style="font-size: 16px; font-weight: bold;">커피 이용 이력</legend>
+            <p>그중 사람들이 이 커피를 <strong>{{coffeeOrderCount}}</strong>회 이용했습니다.</p>
+            <p>(단체주문포함) 이 커피를 <strong>{{totalCoffeeCount}}</strong>회 먹었습니다.</p>
+        </fieldset>
+
+        <fieldset style="margin-top: 15px; border: 1px solid #ccc; border-radius: 8px; padding: 10px;">
+            <legend style="font-size: 16px; font-weight: bold;">마지막 날짜</legend>
+            <p>그중 마지막 사람이 주문한 날짜는 {{lastOrderDate}} 입니다.</p>
+            <img src="/{{lastOrderFaceImage}}" alt="마지막 유사 인물" style="width: 120px; height: auto; border-radius: 8px; margin-top: 10px;">
+        </fieldset>
+
+        <fieldset style="margin-top: 15px; border: 1px solid #ccc; border-radius: 8px; padding: 10px;">
+            <legend style="font-size: 16px; font-weight: bold;">나와 유사한 사람이</legend>
+            {{#disableTop2}}
+                <p>2번째로 많이 먹은 커피가 없습니다.</p>
+            {{/disableTop2}}
+
+            {{^disableTop2}}
+                <p>그중 2번째로 많이 먹은 커피는 {{top2CoffeeName}} 입니다.</p>
+            {{/disableTop2}}
+
+            <button class="pay-btn {{#disableTop2}}disabled-btn{{/disableTop2}}"
+                    onclick="paySingle('{{top2CoffeeId}}')"
+                    {{#disableTop2}}disabled{{/disableTop2}}>
+                이걸로 결제하기
+            </button>
+        </fieldset>
+
+        <fieldset style="margin-top: 15px; border: 1px solid #ccc; border-radius: 8px; padding: 10px;">
+            <legend style="font-size: 16px; font-weight: bold;">나와 유사한 사람이</legend>
+
+            {{#disableTop3}}
+                <p>3번째로 많이 먹은 커피가 없습니다.</p>
+            {{/disableTop3}}
+
+            {{^disableTop3}}
+                <p>그중 3번째로 많이 먹은 커피는 {{top3CoffeeName}} 입니다.</p>
+            {{/disableTop3}}
+
+            <button class="pay-btn {{#disableTop3}}disabled-btn{{/disableTop3}}"
+                    onclick="paySingle('{{top3CoffeeId}}')"
+                    {{#disableTop3}}disabled{{/disableTop3}}>
+                이걸로 결제하기
+            </button>
+        </fieldset>
+
+    </fieldset>
+</div>
+
+
+<script>
+
+    function cancel() {
+        const newFaceId = "{{newFaceId}}";
+        const url = `/?new_face_id=${encodeURIComponent(newFaceId)}`;
+        window.location.href = url;
+    }
+
+    function paySingle(coffeeIdValue) {
+        //const coffeeId = "{{coffeeId}}";
+        const coffeeId = coffeeIdValue || "{{coffeeId}}";
+        const newFaceId = "{{newFaceId}}";
+
+        const formData = new URLSearchParams();
+        formData.append("faceId", newFaceId);
+        formData.append("coffeeId", coffeeId);
+
+        fetch('/pay_single', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData.toString()
+        })
+        .then(response => {
+            if (response.ok) {
+                localStorage.removeItem("cartItems");
+
+                setTimeout(() => {
+                    window.location.href = "/load";
+                }, 2000);
+
+                return response.text();  // 꼭 반환해줘야 아래 then(result => ...) 실행됨
+            } else {
+                alert("결제에 실패했습니다.");
+                console.log(response);
+                throw new Error("결제 실패");
+            }
+        })
+        .then(result => {
+            console.log("결제 결과 메시지:", result);
+        })
+        .catch(error => {
+            console.error("결제 실패:", error);
+        });
+    }
+
+    function goToAIPage() {
+         window.location.href = "http://localhost:4001/";
+    }
+</script>
+
+</body>
+
+
+</html>

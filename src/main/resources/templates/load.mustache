@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>잠시만 기다려주세요...</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFC0CB;
+            text-align: center;
+            padding-top: 100px;
+        }
+
+        .loading-text {
+            font-size: 24px;
+            margin-top: 20px;
+            color: #333;
+        }
+
+        .countdown {
+            font-size: 18px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+         .loader-img {
+            width: 150px;
+            height: auto;
+            display: block;         /* 블록 요소로 전환해서 세로 정렬 */
+            margin: 0 auto 20px;    /* 가운데 정렬 및 하단 여백 */
+        }
+
+        /* seeyou2 전용 스타일 */
+        .success-img {
+            width: 350px;
+            height: 350px;
+            object-fit: cover; /* 이미지가 정사각형 비율에 맞게 꽉 채우도록 */
+        }
+    </style>
+</head>
+<body>
+<img src="/loading.gif" alt="로딩 중" class="loader-img">
+<img src="/seeyou2.png" alt="성공이미지" class="loader-img success-img">
+
+<div class="loading-text">결제가 완료되었습니다. AI 추천 페이지로 이동 중입니다...</div><br>
+<div class="loading-text">다음 고객을 위해 자리를 이동해주세요.</div>
+<div class="countdown">10초 후 이동합니다.</div>
+
+<script>
+    let seconds = 10;
+    const countdownEl = document.querySelector(".countdown");
+
+    const timer = setInterval(() => {
+        seconds--;
+        countdownEl.textContent = `${seconds}초 후 이동합니다.`;
+
+        if (seconds <= 0) {
+            clearInterval(timer);
+            //window.location.href = "http://172.30.1.9:5001/";
+            window.location.href = "http://localhost:4001/";
+        }
+    }, 1000);
+</script>
+</body>
+</html>
