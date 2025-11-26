@@ -5,36 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>커피 메뉴 키오스크</title>
     <link rel="stylesheet" href="/css/styles.css">
-    <style>
-        .d1{
-            display:none;
-        }
-
-        .d2{
-            display:flex;
-        }
-
-    </style>
+    <style></style>
 
 
 </head>
 <body>
+
+
 <div class="kiosk-container">
-    <div class="header-row">
-        <h1 class="center-box">커피 메뉴</h1>
-        <button id="toggle-cart-btn" class="toggle-cart-btn" onclick="toggleCart()" style="background-color: #000; color: #fff; border-radius: 8px;">🛒 장바구니 보기</button>
-    </div>
+    <h1 class="center-box" style="">커피 메뉴</h1>
     <div class="menu-grid">
         {{#coffeeMenuList}}
             <div class="menu-item" data-id="{{id}}">
                 <img src="{{image_url}}" alt="{{name}}">
                 <h3>{{name}}</h3>
                 <p>{{price}} 원</p>
-                <div class="temp-buttons">
-                    <button class="temp-btn ice-btn" data-temp="ICE">ICE</button>
-                    <button class="temp-btn hot-btn" data-temp="HOT">HOT</button>
-                </div>
-
             </div>
         {{/coffeeMenuList}}
     </div>
@@ -56,7 +41,7 @@
 
 </body>
 
-<footer class="cart-footer d1" >
+<footer class="cart-footer">
     <div class="cart-container">
         <h3>🛒 장바구니</h3>
         <div id="order-list"></div>
@@ -70,28 +55,6 @@
     </div>
 </footer>
 
-
-
 <script src="/js/script.js"></script>
-
-<script>
-
-    function toggleCart() {
-    const cartFooter = document.querySelector('.cart-footer');
-    const toggleBtn = document.querySelector('.toggle-cart-btn');
-
-    if (cartFooter.classList.contains('d1')) {
-        // 장바구니 열기
-        cartFooter.classList.remove('d1');
-        cartFooter.classList.add('d2');
-        toggleBtn.textContent = '🛒 장바구니 닫기';
-    } else {
-        // 장바구니 닫기
-        cartFooter.classList.remove('d2');
-        cartFooter.classList.add('d1');
-        toggleBtn.textContent = '🛒 장바구니 보기';
-    }
-}
-</script>
 
 </html>

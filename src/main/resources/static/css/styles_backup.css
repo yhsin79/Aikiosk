@@ -122,12 +122,14 @@
     max-height: 180px; /* ✅ 최대 높이 제한 */
 }
 
-
+/* 전체 페이지 스크롤 가능하도록 설정 */
+body {
+    /* overflow: auto; */
+}
 
 html, body {
     overflow-x: hidden; /* 가로 스크롤 제거 */
     overflow-y: hidden; /* 세로 스크롤 제거 */
-     overflow: auto;
 }
 
 /* 장바구니 고정 시 */
@@ -355,41 +357,3 @@ html, body {
     background-color: #3e8e41;
 }
 
-.temp-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px; /* 버튼 간 간격 */
-    margin-top: 10px;
-}
-
-.temp-btn {
-    padding: 8px 20px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.temp-btn:hover {
-    transform: scale(1.05);
-}
-
-/* ICE 버튼 스타일 */
-.ice-btn {
-    background-color: #00bfff; /* 파란색 */
-    color: white;
-}
-
-/* HOT 버튼 스타일 */
-.hot-btn {
-    background-color: #ff4500; /* 주황/빨강 */
-    color: white;
-}
-
-/* 선택 시 강조 효과 */
-.temp-btn.active {
-    box-shadow: 0 0 10px rgba(0,0,0,0.4);
-    transform: scale(1.1);
-}

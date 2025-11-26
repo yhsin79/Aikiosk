@@ -16,18 +16,20 @@ public class CoffeeOrderService {
 
 
 
-    public void saveOrderMultipleTimes(Long faceId, Long coffeeId, int quantity) {
+    public void saveOrderMultipleTimes(Long faceId, Long coffeeId, int quantity,String tempType) {
         for (int i = 0; i < quantity; i++) {
             CoffeeOrder order = new CoffeeOrder(faceId, coffeeId, LocalDateTime.now());
+            order.setTempType(tempType);
             coffeeOrderRepository.save(order);
         }
     }
 
     @Transactional
-    public void saveOrder(Long faceId, Long coffeeId) {
+    public void saveOrder(Long faceId, Long coffeeId,String tempType) {
         CoffeeOrder order = new CoffeeOrder();
         order.setFaceId(faceId);
         order.setCoffeeId(coffeeId);
+        order.setTempType(tempType);
         order.setOrderTime(LocalDateTime.now());
 
         coffeeOrderRepository.save(order);

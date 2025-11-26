@@ -9,50 +9,42 @@ document.addEventListener("DOMContentLoaded", function () {
     updateCart();
 
     menuItems.forEach(item => {
-        const tempButtons = item.querySelectorAll(".temp-btn");
-        tempButtons.forEach(btn => {
-            btn.addEventListener("click", function (e) {
-                e.stopPropagation(); // 버튼 클릭 시 부모 클릭 이벤트 방지
-                const itemId = item.dataset.id;
-                const itemName = item.querySelector("h3").innerText;
-                const itemPrice = parseInt(item.querySelector("p").innerText.replace(" 원", ""));
-                const tempType = this.dataset.temp; // ICE or HOT
+        item.addEventListener("click", function () {
+            const itemId = this.dataset.id;
+            const itemName = this.querySelector("h3").innerText;
+            const itemPrice = parseInt(this.querySelector("p").innerText.replace(" 원", ""));
 
-                const key = `${itemName} (${tempType})`; // 장바구니에서 이름 + 온도 구분
+           if (!cartItems[itemName]) {
+               cartItems[itemName] = { id: itemId, price: itemPrice, quantity: 0 };
+           } else {
+               // 이름은 같지만 다른 id일 수 있으니 덮어쓰기
+               cartItems[itemName].id = itemId;
+               cartItems[itemName].price = itemPrice;
+           }
+            cartItems[itemName].quantity++;
+            updateCart();
 
-                if (!cartItems[key]) {
-                    cartItems[key] = { id: itemId, price: itemPrice, quantity: 0, tempType: tempType };
-                } else {
-                    cartItems[key].id = itemId;
-                    cartItems[key].price = itemPrice;
-                    cartItems[key].tempType = tempType;
-                }
-                cartItems[key].quantity++;
-                updateCart();
+            // 애니메이션 효과 추가 (장바구니로 이동하는 모션)
+            const clone = this.cloneNode(true);
+            clone.style.position = "absolute";
+            clone.style.zIndex = "1000";
+            clone.style.opacity = "0.8";
+            clone.style.transition = "transform 0.7s ease-in-out, opacity 0.7s";
+            document.body.appendChild(clone);
 
-                // 애니메이션 효과
-                const clone = item.cloneNode(true);
-                clone.style.position = "absolute";
-                clone.style.zIndex = "1000";
-                clone.style.opacity = "0.8";
-                clone.style.transition = "transform 0.7s ease-in-out, opacity 0.7s";
-                document.body.appendChild(clone);
+            const rect = this.getBoundingClientRect();
+            clone.style.left = `${rect.left}px`;
+            clone.style.top = `${rect.top}px`;
+            const cartRect = cartFooter.getBoundingClientRect();
 
-                const rect = item.getBoundingClientRect();
-                clone.style.left = `${rect.left}px`;
-                clone.style.top = `${rect.top}px`;
-                const cartRect = cartFooter.getBoundingClientRect();
+            setTimeout(() => {
+                clone.style.transform = `translate(${cartRect.left - rect.left}px, ${cartRect.top - rect.top}px) scale(0.2)`;
+                clone.style.opacity = "0";
+            }, 50);
 
-                setTimeout(() => {
-                    clone.style.transform = `translate(${cartRect.left - rect.left}px, ${cartRect.top - rect.top}px) scale(0.2)`;
-                    clone.style.opacity = "0";
-                }, 50);
-
-                setTimeout(() => document.body.removeChild(clone), 700);
-            });
+            setTimeout(() => document.body.removeChild(clone), 700);
         });
     });
-
 
     function updateCart() {
         orderList.innerHTML = "";
@@ -63,8 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const listItem = document.createElement("div");
             listItem.classList.add("cart-item");
             listItem.innerHTML = `
-                <span data-id="${item.id}">${itemName} - ${item.tempType} - ${item.price * item.quantity} 원</span>
-                <img src="${item.tempType === 'ICE' ? '/img/ICE.png' : '/img/HOT.png'}" style="width:20px; height:20px;">
+                <span data-id="${item.id}">${itemName} - ${item.price * item.quantity} 원</span>
                 <div class="quantity-control">
                     <button class="decrease-btn">-</button>
                     <input type="number" class="quantity-input" value="${item.quantity}" min="1">

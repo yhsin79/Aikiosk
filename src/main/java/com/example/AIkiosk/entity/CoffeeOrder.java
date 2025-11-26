@@ -20,15 +20,27 @@ public class CoffeeOrder {
     @Column(name = "order_time", nullable = false)
     private LocalDateTime orderTime;
 
+    // 새로 추가: 온도 타입
+    @Column(name = "temp_type")
+    private String tempType;
+
     // 기본 생성자 (JPA용)
     public CoffeeOrder() {
     }
 
-    // 생성자
+    // 기존 생성자 유지
     public CoffeeOrder(Long faceId, Long coffeeId, LocalDateTime orderTime) {
         this.faceId = faceId;
         this.coffeeId = coffeeId;
         this.orderTime = orderTime;
+    }
+
+    // 생성자
+    public CoffeeOrder(Long faceId, Long coffeeId, LocalDateTime orderTime, String tempType) {
+        this.faceId = faceId;
+        this.coffeeId = coffeeId;
+        this.orderTime = orderTime;
+        this.tempType = tempType;
     }
 
     // Getter/Setter
@@ -58,5 +70,13 @@ public class CoffeeOrder {
 
     public void setOrderTime(LocalDateTime orderTime) {
         this.orderTime = orderTime;
+    }
+
+    public String getTempType() {
+        return tempType;
+    }
+
+    public void setTempType(String tempType) {
+        this.tempType = tempType;
     }
 }

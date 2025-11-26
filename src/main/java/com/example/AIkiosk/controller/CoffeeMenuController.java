@@ -2,23 +2,49 @@ package com.example.AIkiosk.controller;
 
 
 import com.example.AIkiosk.dto.CoffeeMenuDTO;
+import com.example.AIkiosk.dto.FaceWithCoffeeDTO;
+import com.example.AIkiosk.repository.CoffeeOrderRepository;
 import com.example.AIkiosk.service.CoffeeMenuService;
 import com.example.AIkiosk.service.CoffeeOrderService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import java.io.StringReader;
+
+
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.net.URLEncoder;
+
 
 @Controller
 public class CoffeeMenuController {
@@ -28,6 +54,9 @@ public class CoffeeMenuController {
 
     @Autowired
     private CoffeeOrderService coffeeOrderService;
+
+    @Autowired
+    private CoffeeOrderRepository coffeeOrderRepository;
 
     @GetMapping("/")
     public String showCoffeeMenu(
@@ -73,50 +102,9 @@ public class CoffeeMenuController {
         public boolean getIsCurrent() { return isCurrent; }
     }
 
+
+    // 백업용
     /*
-    @GetMapping("/recommend")
-    public String recommendCoffee(
-            @RequestParam(value = "coffeeName", required = false, defaultValue = "아메리카노") String coffeeName,
-            @RequestParam(value = "coffeeImage", required = false, defaultValue = "/img/iceAmericano.jpg") String coffeeImage,
-            @RequestParam(value = "totalOrderCount", required = false, defaultValue = "0") int totalOrderCount,
-            @RequestParam(value = "coffeeOrderCount", required = false, defaultValue = "0") int coffeeOrderCount,
-            @RequestParam(value = "lastOrderDate", required = false) String lastOrderDate,
-            @RequestParam(value = "lastOrderFaceImage", required = false) String lastOrderFaceImage,
-            @RequestParam(value = "coffee_id", required = false) int coffeeId,
-            @RequestParam(value = "new_face_id", required = false) int newFaceId,
-            @RequestParam(value = "top2CoffeeId", required = false) int top2CoffeeId,
-            @RequestParam(value = "top3CoffeeId", required = false) int top3CoffeeId,
-            @RequestParam(value = "top2CoffeeName", required = false) String top2CoffeeName,
-            @RequestParam(value = "top3CoffeeName", required = false) String top3CoffeeName,
-            @RequestParam(value = "totalCoffeeCount", required = false) int totalCoffeeCount,
-            Model model) {
-
-        //변동성 있어서 현재 사용안함
-        int visitCount = totalOrderCount + 1; // 현재 방문자 수 계산
-
-        model.addAttribute("coffeeName", coffeeName);
-        model.addAttribute("coffeeImage", coffeeImage);
-        model.addAttribute("totalOrderCount", totalOrderCount);
-        model.addAttribute("coffeeOrderCount", coffeeOrderCount);
-
-        model.addAttribute("lastOrderDate", lastOrderDate);
-        model.addAttribute("lastOrderFaceImage", lastOrderFaceImage);
-
-        model.addAttribute("top2CoffeeId", top2CoffeeId);
-        model.addAttribute("top3CoffeeId", top3CoffeeId);
-        model.addAttribute("top2CoffeeName", top2CoffeeName);
-        model.addAttribute("top3CoffeeName", top3CoffeeName);
-
-
-        model.addAttribute("totalCoffeeCount", totalCoffeeCount);
-
-        model.addAttribute("coffeeId", coffeeId);
-        model.addAttribute("newFaceId", newFaceId);
-
-
-        return "recommendation";
-    }
-    */
     @GetMapping("/recommend")
     public String recommendCoffee(
             @RequestParam(value = "coffeeName", required = false) String coffeeName,
@@ -127,10 +115,15 @@ public class CoffeeMenuController {
             @RequestParam(value = "lastOrderFaceImage", required = false) String lastOrderFaceImage,
             @RequestParam(value = "coffee_id", required = false) Integer coffeeId,
             @RequestParam(value = "new_face_id", required = false) Integer newFaceId,
+            @RequestParam(value = "temp_type", required = false) String temp_type,
+
             @RequestParam(value = "top2CoffeeId", required = false) String top2CoffeeIdStr,
             @RequestParam(value = "top3CoffeeId", required = false) String top3CoffeeIdStr,
             @RequestParam(value = "top2CoffeeName", required = false) String top2CoffeeName,
             @RequestParam(value = "top3CoffeeName", required = false) String top3CoffeeName,
+            @RequestParam(value = "top2_temp_type", required = false) String top2_temp_type,
+            @RequestParam(value = "top3_temp_type", required = false) String top3_temp_type,
+
             @RequestParam(value = "totalCoffeeCount", required = false) Integer totalCoffeeCount,
             Model model) {
 
@@ -171,6 +164,11 @@ public class CoffeeMenuController {
         newFaceId = (newFaceId != null) ? newFaceId : 0;
         top2CoffeeName = (top2CoffeeName != null) ? top2CoffeeName : "데이터 없음";
         top3CoffeeName = (top3CoffeeName != null) ? top3CoffeeName : "데이터 없음";
+
+        temp_type = (temp_type != null) ? temp_type : "데이터 없음";
+        top2_temp_type = (top2_temp_type != null) ? top2_temp_type : "데이터 없음";
+        top3_temp_type = (top3_temp_type != null) ? top3_temp_type : "데이터 없음";
+
         totalCoffeeCount = (totalCoffeeCount != null) ? totalCoffeeCount : 0;
 
         model.addAttribute("coffeeName", coffeeName);
@@ -183,18 +181,443 @@ public class CoffeeMenuController {
         model.addAttribute("newFaceId", newFaceId);
         model.addAttribute("top2CoffeeId", top2CoffeeId);
         model.addAttribute("top3CoffeeId", top3CoffeeId);
+        model.addAttribute("temp_type",temp_type);
+        model.addAttribute("top2_temp_type",top2_temp_type);
+        model.addAttribute("top3_temp_type",top3_temp_type);
         model.addAttribute("top2CoffeeName", top2CoffeeName);
         model.addAttribute("top3CoffeeName", top3CoffeeName);
         model.addAttribute("totalCoffeeCount", totalCoffeeCount);
 
+        boolean weatherApiOk = false;
 
+        try {
+            String serviceKey = "343b26b1abb17b48e2c8a95d700cbed28dcd9d5d33e0fffa9e0951c4419bc273";
+            String nx = "62";
+            String ny = "120";
+
+            LocalDateTime now = LocalDateTime.now();
+            String baseDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+            int hour = now.getHour();
+            String baseTime;
+            if (hour < 2) baseTime = "2300";
+            else if (hour < 5) baseTime = "0200";
+            else if (hour < 8) baseTime = "0500";
+            else if (hour < 11) baseTime = "0800";
+            else if (hour < 14) baseTime = "1100";
+            else if (hour < 17) baseTime = "1400";
+            else if (hour < 20) baseTime = "1700";
+            else if (hour < 23) baseTime = "2000";
+            else baseTime = "2300";
+
+            StringBuilder urlBuilder = new StringBuilder(
+                    "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+            );
+            urlBuilder.append("?serviceKey=").append(URLEncoder.encode(serviceKey, "UTF-8"));
+            urlBuilder.append("&pageNo=1");
+            urlBuilder.append("&numOfRows=100");
+            urlBuilder.append("&dataType=JSON");
+            urlBuilder.append("&base_date=").append(baseDate);
+            urlBuilder.append("&base_time=").append(baseTime);
+            urlBuilder.append("&nx=").append(nx);
+            urlBuilder.append("&ny=").append(ny);
+
+            URL url = new URL(urlBuilder.toString());
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            int responseCode = conn.getResponseCode();
+            BufferedReader rd = new BufferedReader(
+                    new InputStreamReader(responseCode >= 200 && responseCode <= 300 ?
+                            conn.getInputStream() : conn.getErrorStream())
+            );
+
+            StringBuilder result = new StringBuilder();
+            String line;
+            while ((line = rd.readLine()) != null) {
+                result.append(line);
+            }
+            rd.close();
+            conn.disconnect();
+
+            if (responseCode == 200) {
+                weatherApiOk = true;
+            }
+
+            // HTTP 응답 확인
+            if (responseCode != 200) {
+                System.out.println("API 호출 실패: " + responseCode);
+                System.out.println("응답 내용: " + result.toString());
+                // 기본값 세팅
+                model.addAttribute("tmpValue", "데이터 없음");
+                model.addAttribute("ptyText", "데이터 없음");
+                model.addAttribute("popValue", "데이터 없음");
+                model.addAttribute("skyText", "데이터 없음");
+                model.addAttribute("rehValue", "데이터 없음");
+                model.addAttribute("tmx", "데이터 없음");
+                model.addAttribute("tmn", "데이터 없음");
+                model.addAttribute("weatherApiOk", weatherApiOk);
+                return "recommendation";
+            }
+
+            // JSON 파싱
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> map = mapper.readValue(result.toString(), Map.class);
+
+            List<Map<String, Object>> items = (List<Map<String, Object>>)
+                    ((Map)((Map)((Map)map.get("response")).get("body")).get("items")).get("item");
+
+            int nowHour = now.getHour();
+            String closestTime = "";
+            int minDiff = 9999;
+            String tmpValue = "", ptyValue = "", popValue = "", skyValue = "", rehValue = "";
+            String tmx = "", tmn = "";
+
+            for (Map<String, Object> item : items) {
+                String category = (String) item.get("category");
+                String fcstTime = (String) item.get("fcstTime");
+                int fcstHour = Integer.parseInt(fcstTime.substring(0, 2));
+
+                if ("TMP".equals(category)) {
+                    int diff = Math.abs(fcstHour - nowHour);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        tmpValue = (String) item.get("fcstValue");
+                        closestTime = fcstTime;
+                    }
+                } else if ("PTY".equals(category)) {
+                    ptyValue = (String) item.get("fcstValue");
+                } else if ("POP".equals(category)) {
+                    popValue = (String) item.get("fcstValue");
+                } else if ("SKY".equals(category)) {
+                    skyValue = (String) item.get("fcstValue");
+                } else if ("REH".equals(category)) {
+                    rehValue = (String) item.get("fcstValue");
+                } else if ("TMX".equals(category) && item.get("fcstDate").equals(baseDate)) {
+                    tmx = (String) item.get("fcstValue");
+                } else if ("TMN".equals(category) && item.get("fcstDate").equals(baseDate)) {
+                    tmn = (String) item.get("fcstValue");
+                }
+            }
+
+            String skyText = switch (skyValue) {
+                case "1" -> "맑음";
+                case "3" -> "구름많음";
+                case "4" -> "흐림";
+                default -> "알수없음";
+            };
+            String ptyText = switch (ptyValue) {
+                case "0" -> "없음";
+                case "1" -> "비";
+                case "2" -> "비/눈";
+                case "3" -> "눈";
+                case "4" -> "소나기";
+                default -> "알수없음";
+            };
+
+            System.out.println("현재 시간 기준 TMP(" + closestTime + "): " + tmpValue);
+            System.out.println("강수 형태(PTY): " + ptyText);
+            System.out.println("강수 확률(POP): " + popValue + "%");
+            System.out.println("하늘 상태(SKY): " + skyText);
+            System.out.println("습도(REH): " + rehValue + "%");
+            System.out.println("일 최고 기온(TMX): " + tmx);
+            System.out.println("일 최저 기온(TMN): " + tmn);
+
+            // 모델에 넣기
+            model.addAttribute("tmpValue", tmpValue);
+            model.addAttribute("ptyText", ptyText);
+            model.addAttribute("popValue", popValue);
+            model.addAttribute("skyText", skyText);
+            model.addAttribute("rehValue", rehValue);
+            model.addAttribute("tmx", tmx);
+            model.addAttribute("tmn", tmn);
+            model.addAttribute("weatherApiOk", weatherApiOk);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 예외 발생 시 기본값 세팅
+            model.addAttribute("tmpValue", "데이터 없음");
+            model.addAttribute("ptyText", "데이터 없음");
+            model.addAttribute("popValue", "데이터 없음");
+            model.addAttribute("skyText", "데이터 없음");
+            model.addAttribute("rehValue", "데이터 없음");
+            model.addAttribute("tmx", "데이터 없음");
+            model.addAttribute("tmn", "데이터 없음");
+            model.addAttribute("weatherApiOk", weatherApiOk);
+        }
 
 
 
 
         return "recommendation";
     }
+    */
 
+    @PostMapping("/recommend")
+    public String recommendCoffee(
+            @RequestParam(value = "coffeeName", required = false) String coffeeName,
+            @RequestParam(value = "coffeeImage", required = false) String coffeeImage,
+            @RequestParam(value = "totalOrderCount", required = false) Integer totalOrderCount,
+            @RequestParam(value = "coffeeOrderCount", required = false) Integer coffeeOrderCount,
+            @RequestParam(value = "lastOrderDate", required = false) String lastOrderDate,
+            @RequestParam(value = "lastOrderFaceImage", required = false) String lastOrderFaceImage,
+            @RequestParam(value = "coffee_id", required = false) Integer coffeeId,
+            @RequestParam(value = "new_face_id", required = false) Integer newFaceId,
+            @RequestParam(value = "temp_type", required = false) String temp_type,
+
+            @RequestParam(value = "top2CoffeeId", required = false) String top2CoffeeIdStr,
+            @RequestParam(value = "top3CoffeeId", required = false) String top3CoffeeIdStr,
+            @RequestParam(value = "top2CoffeeName", required = false) String top2CoffeeName,
+            @RequestParam(value = "top3CoffeeName", required = false) String top3CoffeeName,
+            @RequestParam(value = "top2_temp_type", required = false) String top2_temp_type,
+            @RequestParam(value = "top3_temp_type", required = false) String top3_temp_type,
+
+            @RequestParam(value = "totalCoffeeCount", required = false) Integer totalCoffeeCount,
+            @RequestParam(value = "matched_unique_face_ids", required = false) List<Integer> matchedUniqueFaceIds,
+            Model model) {
+
+        // top2CoffeeId, top3CoffeeId String에서 바로 int 변환 (null 또는 "null"은 0으로)
+        Integer top2CoffeeId = 0;
+        if (top2CoffeeIdStr != null && !top2CoffeeIdStr.equalsIgnoreCase("null") && !top2CoffeeIdStr.isEmpty()) {
+            try {
+                top2CoffeeId = Integer.parseInt(top2CoffeeIdStr);
+            } catch (NumberFormatException e) {
+                top2CoffeeId = 0;
+            }
+        }
+
+        Integer top3CoffeeId = 0;
+        if (top3CoffeeIdStr != null && !top3CoffeeIdStr.equalsIgnoreCase("null") && !top3CoffeeIdStr.isEmpty()) {
+            try {
+                top3CoffeeId = Integer.parseInt(top3CoffeeIdStr);
+            } catch (NumberFormatException e) {
+                top3CoffeeId = 0;
+            }
+        }
+
+        boolean disableTop2 = (top2CoffeeId == 0);
+        boolean disableTop3 = (top3CoffeeId == 0);
+
+        model.addAttribute("disableTop2", disableTop2);
+        model.addAttribute("disableTop3", disableTop3);
+
+
+
+        coffeeName = (coffeeName != null) ? coffeeName : "데이터 없음";
+        coffeeImage = (coffeeImage != null) ? coffeeImage : "/img/iceAmericano.jpg";
+        totalOrderCount = (totalOrderCount != null) ? totalOrderCount : 0;
+        coffeeOrderCount = (coffeeOrderCount != null) ? coffeeOrderCount : 0;
+        lastOrderDate = (lastOrderDate != null) ? lastOrderDate : "데이터 없음";
+        lastOrderFaceImage = (lastOrderFaceImage != null) ? lastOrderFaceImage : "/img/unknown_face.jpg";
+        coffeeId = (coffeeId != null) ? coffeeId : 0;
+        newFaceId = (newFaceId != null) ? newFaceId : 0;
+        top2CoffeeName = (top2CoffeeName != null) ? top2CoffeeName : "데이터 없음";
+        top3CoffeeName = (top3CoffeeName != null) ? top3CoffeeName : "데이터 없음";
+
+        temp_type = (temp_type != null) ? temp_type : "데이터 없음";
+        top2_temp_type = (top2_temp_type != null) ? top2_temp_type : "데이터 없음";
+        top3_temp_type = (top3_temp_type != null) ? top3_temp_type : "데이터 없음";
+
+        totalCoffeeCount = (totalCoffeeCount != null) ? totalCoffeeCount : 0;
+
+        model.addAttribute("coffeeName", coffeeName);
+        model.addAttribute("coffeeImage", coffeeImage);
+        model.addAttribute("totalOrderCount", totalOrderCount);
+        model.addAttribute("coffeeOrderCount", coffeeOrderCount);
+        model.addAttribute("lastOrderDate", lastOrderDate);
+        model.addAttribute("lastOrderFaceImage", lastOrderFaceImage);
+        model.addAttribute("coffeeId", coffeeId);
+        model.addAttribute("newFaceId", newFaceId);
+        model.addAttribute("top2CoffeeId", top2CoffeeId);
+        model.addAttribute("top3CoffeeId", top3CoffeeId);
+        model.addAttribute("temp_type",temp_type);
+        model.addAttribute("top2_temp_type",top2_temp_type);
+        model.addAttribute("top3_temp_type",top3_temp_type);
+        model.addAttribute("top2CoffeeName", top2CoffeeName);
+        model.addAttribute("top3CoffeeName", top3CoffeeName);
+        model.addAttribute("totalCoffeeCount", totalCoffeeCount);
+
+        model.addAttribute("matchedUniqueFaceIds", matchedUniqueFaceIds);
+
+        // 배열 출력
+        if (matchedUniqueFaceIds != null && !matchedUniqueFaceIds.isEmpty()) {
+            System.out.println("✅ matched_unique_face_ids:");
+            for (Integer id : matchedUniqueFaceIds) {
+                System.out.println(" - " + id);
+            }
+        } else {
+            System.out.println("❌ matched_unique_face_ids is empty or null");
+        }
+
+        if (matchedUniqueFaceIds != null && !matchedUniqueFaceIds.isEmpty()) {
+            List<FaceWithCoffeeDTO> faceData = coffeeOrderRepository.findLatestFaceWithCoffeeDTOByFaceIds(matchedUniqueFaceIds);
+            model.addAttribute("matchedFaceData", faceData);
+        }
+
+
+        boolean weatherApiOk = false;
+
+        try {
+            String serviceKey = "343b26b1abb17b48e2c8a95d700cbed28dcd9d5d33e0fffa9e0951c4419bc273";
+            String nx = "62";
+            String ny = "120";
+
+            LocalDateTime now = LocalDateTime.now();
+            String baseDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+            int hour = now.getHour();
+            String baseTime;
+            if (hour < 2) baseTime = "2300";
+            else if (hour < 5) baseTime = "0200";
+            else if (hour < 8) baseTime = "0500";
+            else if (hour < 11) baseTime = "0800";
+            else if (hour < 14) baseTime = "1100";
+            else if (hour < 17) baseTime = "1400";
+            else if (hour < 20) baseTime = "1700";
+            else if (hour < 23) baseTime = "2000";
+            else baseTime = "2300";
+
+            StringBuilder urlBuilder = new StringBuilder(
+                    "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+            );
+            urlBuilder.append("?serviceKey=").append(URLEncoder.encode(serviceKey, "UTF-8"));
+            urlBuilder.append("&pageNo=1");
+            urlBuilder.append("&numOfRows=100");
+            urlBuilder.append("&dataType=JSON");
+            urlBuilder.append("&base_date=").append(baseDate);
+            urlBuilder.append("&base_time=").append(baseTime);
+            urlBuilder.append("&nx=").append(nx);
+            urlBuilder.append("&ny=").append(ny);
+
+            URL url = new URL(urlBuilder.toString());
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            int responseCode = conn.getResponseCode();
+            BufferedReader rd = new BufferedReader(
+                    new InputStreamReader(responseCode >= 200 && responseCode <= 300 ?
+                            conn.getInputStream() : conn.getErrorStream())
+            );
+
+            StringBuilder result = new StringBuilder();
+            String line;
+            while ((line = rd.readLine()) != null) {
+                result.append(line);
+            }
+            rd.close();
+            conn.disconnect();
+
+            if (responseCode == 200) {
+                weatherApiOk = true;
+            }
+
+            // HTTP 응답 확인
+            if (responseCode != 200) {
+                System.out.println("API 호출 실패: " + responseCode);
+                System.out.println("응답 내용: " + result.toString());
+                // 기본값 세팅
+                model.addAttribute("tmpValue", "데이터 없음");
+                model.addAttribute("ptyText", "데이터 없음");
+                model.addAttribute("popValue", "데이터 없음");
+                model.addAttribute("skyText", "데이터 없음");
+                model.addAttribute("rehValue", "데이터 없음");
+                model.addAttribute("tmx", "데이터 없음");
+                model.addAttribute("tmn", "데이터 없음");
+                model.addAttribute("weatherApiOk", weatherApiOk);
+                return "recommendation";
+            }
+
+            // JSON 파싱
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> map = mapper.readValue(result.toString(), Map.class);
+
+            List<Map<String, Object>> items = (List<Map<String, Object>>)
+                    ((Map)((Map)((Map)map.get("response")).get("body")).get("items")).get("item");
+
+            int nowHour = now.getHour();
+            String closestTime = "";
+            int minDiff = 9999;
+            String tmpValue = "", ptyValue = "", popValue = "", skyValue = "", rehValue = "";
+            String tmx = "", tmn = "";
+
+            for (Map<String, Object> item : items) {
+                String category = (String) item.get("category");
+                String fcstTime = (String) item.get("fcstTime");
+                int fcstHour = Integer.parseInt(fcstTime.substring(0, 2));
+
+                if ("TMP".equals(category)) {
+                    int diff = Math.abs(fcstHour - nowHour);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        tmpValue = (String) item.get("fcstValue");
+                        closestTime = fcstTime;
+                    }
+                } else if ("PTY".equals(category)) {
+                    ptyValue = (String) item.get("fcstValue");
+                } else if ("POP".equals(category)) {
+                    popValue = (String) item.get("fcstValue");
+                } else if ("SKY".equals(category)) {
+                    skyValue = (String) item.get("fcstValue");
+                } else if ("REH".equals(category)) {
+                    rehValue = (String) item.get("fcstValue");
+                } else if ("TMX".equals(category) && item.get("fcstDate").equals(baseDate)) {
+                    tmx = (String) item.get("fcstValue");
+                } else if ("TMN".equals(category) && item.get("fcstDate").equals(baseDate)) {
+                    tmn = (String) item.get("fcstValue");
+                }
+            }
+
+            String skyText = switch (skyValue) {
+                case "1" -> "맑음";
+                case "3" -> "구름많음";
+                case "4" -> "흐림";
+                default -> "알수없음";
+            };
+            String ptyText = switch (ptyValue) {
+                case "0" -> "없음";
+                case "1" -> "비";
+                case "2" -> "비/눈";
+                case "3" -> "눈";
+                case "4" -> "소나기";
+                default -> "알수없음";
+            };
+
+            System.out.println("현재 시간 기준 TMP(" + closestTime + "): " + tmpValue);
+            System.out.println("강수 형태(PTY): " + ptyText);
+            System.out.println("강수 확률(POP): " + popValue + "%");
+            System.out.println("하늘 상태(SKY): " + skyText);
+            System.out.println("습도(REH): " + rehValue + "%");
+            System.out.println("일 최고 기온(TMX): " + tmx);
+            System.out.println("일 최저 기온(TMN): " + tmn);
+
+            // 모델에 넣기
+            model.addAttribute("tmpValue", tmpValue);
+            model.addAttribute("ptyText", ptyText);
+            model.addAttribute("popValue", popValue);
+            model.addAttribute("skyText", skyText);
+            model.addAttribute("rehValue", rehValue);
+            model.addAttribute("tmx", tmx);
+            model.addAttribute("tmn", tmn);
+            model.addAttribute("weatherApiOk", weatherApiOk);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 예외 발생 시 기본값 세팅
+            model.addAttribute("tmpValue", "데이터 없음");
+            model.addAttribute("ptyText", "데이터 없음");
+            model.addAttribute("popValue", "데이터 없음");
+            model.addAttribute("skyText", "데이터 없음");
+            model.addAttribute("rehValue", "데이터 없음");
+            model.addAttribute("tmx", "데이터 없음");
+            model.addAttribute("tmn", "데이터 없음");
+            model.addAttribute("weatherApiOk", weatherApiOk);
+        }
+
+
+
+
+        return "recommendation";
+    }
 
 
     @GetMapping("/latest")
@@ -207,6 +630,7 @@ public class CoffeeMenuController {
             @RequestParam(value = "coffee_name_1", required = false) String coffeeName1,
             @RequestParam(value = "coffee_image_url_1", required = false) String coffeeImageUrl1,
             @RequestParam(value = "latest_order_1", required = false) String latestOrder1,
+            @RequestParam(value = "temp_type_1", required = false) String tempType1,
 
             @RequestParam(value = "face_id_2", required = false) String faceId2Str,
             @RequestParam(value = "image_path_2", required = false) String imagePath2,
@@ -214,6 +638,7 @@ public class CoffeeMenuController {
             @RequestParam(value = "coffee_name_2", required = false) String coffeeName2,
             @RequestParam(value = "coffee_image_url_2", required = false) String coffeeImageUrl2,
             @RequestParam(value = "latest_order_2", required = false) String latestOrder2,
+            @RequestParam(value = "temp_type_2", required = false) String tempType2,
 
             @RequestParam(value = "face_id_3", required = false) String faceId3Str,
             @RequestParam(value = "image_path_3", required = false) String imagePath3,
@@ -221,6 +646,7 @@ public class CoffeeMenuController {
             @RequestParam(value = "coffee_name_3", required = false) String coffeeName3,
             @RequestParam(value = "coffee_image_url_3", required = false) String coffeeImageUrl3,
             @RequestParam(value = "latest_order_3", required = false) String latestOrder3,
+            @RequestParam(value = "temp_type_3", required = false) String tempType3,
             Model model) {
 
         Long newFaceId = 0L;
@@ -333,6 +759,11 @@ public class CoffeeMenuController {
         model.addAttribute("coffeeImage3", coffeeImageUrl3);
         model.addAttribute("orderTime3", formattedOrder3);
 
+        // Model에 temp_type도 추가
+        model.addAttribute("temp_type1", tempType1 != null ? tempType1 : "HOT");
+        model.addAttribute("temp_type2", tempType2 != null ? tempType2 : "HOT");
+        model.addAttribute("temp_type3", tempType3 != null ? tempType3 : "HOT");
+
         return "latestRecommend";
     }
 
@@ -348,7 +779,7 @@ public class CoffeeMenuController {
             outputSdf.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
 
             return outputSdf.format(date);
-        } catch (ParseException e) {
+        } catch (ParseException e){
             e.printStackTrace();
             return inputDate;
         }
@@ -375,14 +806,16 @@ public class CoffeeMenuController {
 
             Long coffeeId = Long.parseLong(item.get("id").toString());
             int quantity = Integer.parseInt(item.get("quantity").toString());
+            String tempType = (String) item.get("tempType");
 
             // CoffeeOrderService로 주문 저장
-            coffeeOrderService.saveOrderMultipleTimes(faceId, coffeeId, quantity);
+            coffeeOrderService.saveOrderMultipleTimes(faceId, coffeeId, quantity, tempType);
         }
 
         return ResponseEntity.ok("주문 저장 완료");
     }
 
+    /*
     @PostMapping("/pay_single")
     public ResponseEntity<String> paySingle(
             @RequestParam("faceId") Long faceId,
@@ -392,6 +825,26 @@ public class CoffeeMenuController {
         System.out.println(coffeeId);
 
         coffeeOrderService.saveOrder(faceId, coffeeId);
+        return ResponseEntity.ok("결제 및 저장 완료!");
+    }
+
+    @GetMapping("/load")
+    public String showLoadPage() {
+        return "load"; // load.mustache
+    }
+    */
+
+    @PostMapping("/pay_single")
+    public ResponseEntity<String> paySingle(
+            @RequestParam("faceId") Long faceId,
+            @RequestParam("coffeeId") Long coffeeId,
+            @RequestParam("tempType") String tempType) {
+
+        System.out.println(faceId);
+        System.out.println(coffeeId);
+        System.out.println("tempType: " + tempType);
+
+        coffeeOrderService.saveOrder(faceId, coffeeId,tempType);
         return ResponseEntity.ok("결제 및 저장 완료!");
     }
 

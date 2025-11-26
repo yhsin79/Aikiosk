@@ -122,12 +122,14 @@
     max-height: 180px; /* ✅ 최대 높이 제한 */
 }
 
-
+/* 전체 페이지 스크롤 가능하도록 설정 */
+body {
+    /* overflow: auto; */
+}
 
 html, body {
     overflow-x: hidden; /* 가로 스크롤 제거 */
     overflow-y: hidden; /* 세로 스크롤 제거 */
-     overflow: auto;
 }
 
 /* 장바구니 고정 시 */

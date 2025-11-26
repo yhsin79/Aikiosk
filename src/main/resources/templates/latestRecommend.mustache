@@ -104,13 +104,18 @@
 
         <div class="profile-card">
             <img src="/{{image1}}" alt="유사 인물" class="face-img">
-            <div class="coffee-name">{{coffeeName1}}</div>
+            <div class="coffee-name">
+                <img id="tempImage1" class="temp-image" alt="온도 구분" style="width:25px; height:25px;">
+                {{coffeeName1}}
+            </div>
             <img src="{{coffeeImage1}}" alt="추천 커피" class="coffee-img">
             <div> 주문한 날짜 : {{orderTime1}} </div>
 
             <form action="/pay_single" method="post">
                 <input type="hidden" name="faceId" value="{{newFaceId}}">
                 <input type="hidden" name="coffeeId" value="{{coffeeId1}}">
+                <input type="hidden" name="tempType" value="{{temp_type1}}">
+
                 <button class="button {{#disableCoffee1}}disabled-btn{{/disableCoffee1}}"
                         {{#disableCoffee1}}disabled{{/disableCoffee1}}
                         onclick="paySingle(event)">예, 이걸로 결제하기</button>
@@ -120,12 +125,16 @@
 
         <div class="profile-card">
             <img src="/{{image2}}" alt="유사 인물" class="face-img">
-            <div class="coffee-name">{{coffeeName2}}</div>
+            <div class="coffee-name">
+                <img id="tempImage2" class="temp-image" alt="온도 구분" style="width:25px; height:25px;">
+                {{coffeeName2}}
+            </div>
             <img src="{{coffeeImage2}}" alt="추천 커피" class="coffee-img">
             <div> 주문한 날짜 : {{orderTime2}} </div>
             <form action="/pay_single" method="post">
                 <input type="hidden" name="faceId" value="{{newFaceId}}">
                 <input type="hidden" name="coffeeId" value="{{coffeeId2}}">
+                <input type="hidden" name="tempType" value="{{temp_type2}}">
                 <button class="button {{#disableCoffee2}}disabled-btn{{/disableCoffee2}}"
                         {{#disableCoffee2}}disabled{{/disableCoffee2}}
                         onclick="paySingle(event)">예, 이걸로 결제하기</button>
@@ -135,12 +144,16 @@
 
         <div class="profile-card">
             <img src="/{{image3}}" alt="유사 인물" class="face-img">
-            <div class="coffee-name">{{coffeeName3}}</div>
+            <div class="coffee-name">
+                <img id="tempImage3" class="temp-image" alt="온도 구분" style="width:25px; height:25px;">
+                {{coffeeName3}}
+            </div>
             <img src="{{coffeeImage3}}" alt="추천 커피" class="coffee-img">
             <div> 주문한 날짜 : {{orderTime3}} </div>
             <form action="/pay_single" method="post">
                 <input type="hidden" name="faceId" value="{{newFaceId}}">
                 <input type="hidden" name="coffeeId" value="{{coffeeId3}}">
+                <input type="hidden" name="tempType" value="{{temp_type3}}">
                 <button class="button {{#disableCoffee3}}disabled-btn{{/disableCoffee3}}"
                         {{#disableCoffee3}}disabled{{/disableCoffee3}}
                         onclick="paySingle(event)">예, 이걸로 결제하기</button>
@@ -156,6 +169,27 @@
 </div>
 
 <script>
+    window.onload = function() {
+    const tempTypes = [
+        "{{temp_type1}}",
+        "{{temp_type2}}",
+        "{{temp_type3}}"
+    ];
+
+    console.log("tempTypes:", tempTypes);
+
+        for (let i = 0; i < tempTypes.length; i++) {
+            const tempType = (tempTypes[i] || "HOT").trim().toUpperCase();
+            const img = document.getElementById(`tempImage${i+1}`);
+            console.log(`tempType${i+1}:`, tempType, "img element:", img);
+
+            if (img) {
+                img.src = tempType === "ICE" ? "/img/ICE.png" : "/img/HOT.png";
+                console.log(`Set image ${i+1} src to:`, img.src);
+            }
+        } // <-- for문 닫힘
+    }; // <-- window.onload 함수 닫힘
+
 
     function cancel() {
         const newFaceId = "{{newFaceId}}";
@@ -173,6 +207,7 @@
         const form = event.target.closest('form'); // 클릭된 버튼의 form만 선택
         const faceId = form.querySelector('input[name="faceId"]').value;
         const coffeeId = form.querySelector('input[name="coffeeId"]').value;
+        const tempType = form.querySelector('input[name="tempType"]').value;
 
         fetch('/pay_single', {  // URL은 form의 action과 동일하게 설정
             method: 'POST',
@@ -181,7 +216,8 @@
             },
             body: new URLSearchParams({
                 faceId: faceId,
-                coffeeId: coffeeId
+                coffeeId: coffeeId,
+                tempType: tempType
             })
         })
         .then(response => {

@@ -7,13 +7,12 @@
     <style>
         body {
             display: flex;
-            justify-content:  flex-start;
+            justify-content: center;
             align-items: center;
             height: 100vh;
             flex-direction: column;
             background-color: #f8f8f8;
             text-align: center;
-             padding-top: 40px; /* 위쪽 여유 공간 추가 */
         }
         .coffee-container {
             background: white;
@@ -27,7 +26,7 @@
         .weather-container {
             position: fixed;
             bottom: 20px;
-            left: 400px;
+            left: 500px;
             width: 220px;
             padding: 12px;
             padding-right: 50px;
@@ -94,23 +93,6 @@
             vertical-align: middle;  /* ✅ 텍스트와 수직 중앙 정렬 */
 
         }
-
-        /* HISTORY 박스 안 유사 얼굴 이미지 - column */
-    .face-images-container {
-        display: flex;
-        flex-direction: column; /* 세로 나열 */
-        gap: 10px;              /* 이미지 간격 */
-        max-height: 760px;      /* 세로 길이 제한, 필요에 따라 조절 */
-        overflow-y: auto;       /* 세로 스크롤 가능 */
-        padding: 10px 0;
-    }
-
-    .face-images-container img {
-        width: 90px;
-        height: auto;
-        border-radius: 8px;
-        align-self: center;     /* 중앙 정렬 */
-    }
 
     </style>
 </head>
@@ -186,50 +168,12 @@
 
 
 
-
-    <fieldset style="margin-top: 15px; border: 1px solid #ccc; border-radius: 8px; padding: 10px;">
-        <legend style="font-size: 16px; font-weight: bold;">나와 유사한 사람들</legend>
-
-        <div class="face-images-container">
-            {{#matchedFaceData}}
-                <div class="face-item" style="margin-bottom: 15px;">
-                    <img src="/{{imagePath}}" alt="유사 얼굴" style="width: 90px; height: auto; border-radius: 8px;">
-                    <p style="margin-top: 3px; color: #6b4f4f; font-weight: bold;">{{coffeeName}} 주문</p>
-                </div>
-            {{/matchedFaceData}}
-        </div>
-    </fieldset>
-
-
-
 </div>
 
 <!-- 날씨 추천 박스: 별도 컨테이너 -->
-<!-- 날씨 API 성공 시 -->
-{{#weatherApiOk}}
-    <div class="weather-container">
-        <h3>오늘 날씨 기반 추천 </h3>
-        <p>위치: <strong>경기도 용인시 기흥구</strong></p>
-        <p>현재 기온: <strong>{{tmpValue}}℃</strong></p>
-        <p>날씨 상태: <strong>{{skyText}} / {{ptyText}}</strong></p>
-        <p>추천: <img id="tempImage4" alt="온도 구분" class="temp-image"> <strong id="weather-coffee-name">{{coffeeName}} 추천합니다</strong></p>
-        <button class="pay-btn" style="margin-top:10px;" onclick="paySingle('{{coffeeId}}','HOT')">이걸로 계산하기</button>
-    </div>
-{{/weatherApiOk}}
 
-<!-- 날씨 API 실패 시 -->
-{{^weatherApiOk}}
-<div class="weather-container">
-    <h3>오늘 날씨 기반 추천 </h3>
-    <p>위치: <strong>경기도 용인시 기흥구</strong></p>
-    <p>현재 기온: <strong>15℃</strong></p>
-    <p>날씨 상태: <strong>맑음 / 쌀쌀함</strong></p>
-    <p>추천: <img id="tempImage4" alt="온도 구분" class="temp-image">
-        <strong id="weather-coffee-name">{{coffeeName}} 추천합니다</strong>
-    </p>
-    <button class="pay-btn" style="margin-top:10px;" onclick="paySingle('{{coffeeId}}','HOT')">이걸로 계산하기</button>
-</div>
-{{/weatherApiOk}}
+
+<div class="weather-container"> <h3>오늘 날씨 기반 추천</h3> <p>위치: <strong>경기도 용인시 기흥구</strong></p> <p>현재 기온: <strong>15℃</strong></p> <p>날씨 상태: <strong>맑음 / 쌀쌀함</strong></p> <p>추천: <img id="tempImage4" alt="온도 구분" class="temp-image"> <strong id="weather-coffee-name">{{coffeeName}} 추천합니다</strong></p> <button class="pay-btn" style="margin-top:10px;" onclick="paySingle('{{coffeeId}}','HOT')">이걸로 계산하기</button> </div>
 
 <script>
 
@@ -310,21 +254,11 @@
             tempImage3.src = top3TempType === "ICE" ? "/img/ICE.png" : "/img/HOT.png";
         }
 
-        // 4. 날씨 기반 추천 이미지
+        // 날씨 기반 추천 커피 이미지
         const weatherTempImage = document.getElementById("tempImage4");
-        const tmpValue = "{{tmpValue}}";
-
         if (weatherTempImage) {
-        // API 화재로 인해 데이터 없을시 임시 15도로 맞춤
-            if (tmpValue === "데이터 없음") {
-                // API 실패 시 기본 이미지 (예: HOT)
-                weatherTempImage.src = "/img/HOT.png";
-
-            } else {
-                // tmpValue가 숫자일 때 15℃ 이하이면 HOT, 초과이면 ICE
-                const tempNum = parseInt(tmpValue, 10);
-                weatherTempImage.src = tempNum <= 15 ? "/img/HOT.png" : "/img/ICE.png";
-            }
+            // 테스트용: 현재 15℃ → 쌀쌀함 → HOT 추천
+            weatherTempImage.src = "/img/HOT.png";
         }
     };
 </script>
